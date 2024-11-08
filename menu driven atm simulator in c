@@ -1,0 +1,139 @@
+/*
+ * ATM Simulator
+ * Author: Subiksen
+ * This program simulates basic ATM functionalities like checking balance,
+ * depositing money, withdrawing money, and viewing transaction history.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to store each transaction
+struct Transaction {
+    float amount;
+    struct Transaction *next;
+};
+
+// Structure to represent an account with balance and linked list of transactions
+struct Account {
+    float balance;
+    struct Transaction *transactions;
+};
+
+// Function to add a transaction to the account
+void addTransaction(struct Account *acc, float amount) {
+    // Allocate memory for a new transaction
+    struct Transaction *newTransaction = (struct Transaction *)malloc(sizeof(struct Transaction));
+    newTransaction->amount = amount;  // Set transaction amount
+    newTransaction->next = acc->transactions; // Link new transaction to the existing list
+    acc->transactions = newTransaction; // Update head of the list
+}
+
+// Function to display all transactions
+void displayTransactions(struct Account *acc) {
+    struct Transaction *current = acc->transactions;
+    // Check if there are no transactions
+    if (current == NULL) {
+        printf("No transactions available.\n");
+        return;
+    }
+    printf("Transaction History:\n");
+    // Loop through the linked list of transactions
+    while (current != NULL) {
+        printf("Transaction: $%.2f\n", current->amount); // Print each transaction amount
+        current = current->next; // Move to the next transaction
+    }
+}
+
+// Function to deposit money into the account
+void deposit(struct Account *acc, float amount) {
+    if (amount > 0) {
+        acc->balance += amount; // Increase balance by deposit amount
+        addTransaction(acc, amount); // Record the deposit as a transaction
+        printf("Deposited: $%.2f\n", amount);
+    } else {
+        printf("Invalid deposit amount.\n");
+    }
+}
+
+// Function to withdraw money from the account
+void withdraw(struct Account *acc, float amount) {
+    // Check if the amount is valid and if there is enough balance
+    if (amount > 0 && amount <= acc->balance) {
+        acc->balance -= amount; // Decrease balance by withdrawal amount
+        addTransaction(acc, -amount); // Record the withdrawal as a transaction
+        printf("Withdrawn: $%.2f\n", amount);
+    } else {
+        printf("Insufficient balance or invalid amount.\n");
+    }
+}
+
+int main() {
+    struct Account acc = {0, NULL}; // Initialize account with zero balance and no transactions
+    int choice, pin = 1234, enteredPin;
+
+    // PIN authentication process
+    printf("Enter your PIN: ");
+    scanf("%d", &enteredPin);
+
+    // Check if the entered PIN is correct
+    if (enteredPin == pin) {
+        // Display the ATM menu until the user chooses to exit
+        do {
+            printf("\nATM Menu:\n");
+            printf("1. Check Balance\n");
+            printf("2. Deposit\n");
+            printf("3. Withdraw\n");
+            printf("4. View Transactions\n");
+            printf("5. Exit\n");
+            printf("Enter your choice: ");
+            scanf("%d", &choice);
+
+            // Perform the operation based on user's choice
+            switch (choice) {
+                case 1:
+                    // Display current balance
+                    printf("Your balance is: $%.2f\n", acc.balance);
+                    break;
+                case 2: {
+                    // Handle deposit
+                    float depositAmount;
+                    printf("Enter amount to deposit: $");
+                    scanf("%f", &depositAmount);
+                    deposit(&acc, depositAmount);
+                    break;
+                }
+                case 3: {
+                    // Handle withdrawal
+                    float withdrawAmount;
+                    printf("Enter amount to withdraw: $");
+                    scanf("%f", &withdrawAmount);
+                    withdraw(&acc, withdrawAmount);
+                    break;
+                }
+                case 4:
+                    // Display all transactions
+                    displayTransactions(&acc);
+                    break;
+                case 5:
+                    // Exit the ATM simulator
+                    printf("Thank you for using the ATM simulator!\n");
+                    break;
+                default:
+                    printf("Invalid choice. Please try again.\n");
+            }
+        } while (choice != 5);
+
+        // Free memory allocated for transactions before exiting
+        struct Transaction *currTransaction = acc.transactions;
+        while (currTransaction != NULL) {
+            struct Transaction *temp = currTransaction; // Hold current transaction
+            currTransaction = currTransaction->next; // Move to the next transaction
+            free(temp); // Free the memory of the current transaction
+        }
+    } else {
+        // If the PIN is incorrect
+        printf("Invalid PIN. Please try again.\n");
+    }
+    return 0;
+}
